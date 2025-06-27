@@ -1,30 +1,28 @@
 import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { validationResult, body } from "express-validator";
+import { body, validationResult } from "express-validator";
 import { RequestValidationError } from "../errors/request-validation-error";
 import { BadRequestError } from "../errors/badRequest-error";
 import { User } from "../models/userModel";
 
+
+console.log(typeof body);
 // User Registration Controller
 const signUp = asyncHandler(async (req: Request, res: Response) => {
     // Validate userID (assuming userID is your primary identifier)
-    await body("userID")
-        .notEmpty()
-        .withMessage("UserID is required")
-        .run(req);
+    body("userID").notEmpty().withMessage("UserID is required").run(req);
 
     // Validate password length
-    await body("password")
+    body("password")
         .isLength({ min: 2, max: 4 })
-        .withMessage("Password must be at least 2 characters and at most 4 characters")
+        .withMessage(
+            "Password must be at least 2 characters and at most 4 characters"
+        )
         .run(req);
 
     // Validate name
-    await body("name")
-        .notEmpty()
-        .withMessage("Name is required")
-        .run(req);
+    body("name").notEmpty().withMessage("Name is required").run(req);
 
     const errors = validationResult(req);
 
@@ -53,17 +51,15 @@ const signUp = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const signIn = asyncHandler(async (req: Request, res: Response) => {
-    await body("userID")
-        .notEmpty()
-        .withMessage("UserID is required")
-        .run(req);
+    body("userID").notEmpty().withMessage("UserID is required").run(req);
 
     // Validate password length
-    await body("password")
-        .trim().notEmpty().withMessage('You must apply a password')
+    body("password")
+        .trim()
+        .notEmpty()
+        .withMessage("You must apply a password")
         .run(req);
     const errors = validationResult(req);
-
 
     if (!errors.isEmpty()) {
         throw new RequestValidationError(errors.array());
@@ -92,9 +88,9 @@ const signIn = asyncHandler(async (req: Request, res: Response) => {
     // store it on session object
 
     req.session = {
-        jwt: userJwt
-    }
-    res.status(200).send(user)
+        jwt: userJwt,
+    };
+    res.status(200).send(user);
 });
 
 const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
