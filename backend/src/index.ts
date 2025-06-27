@@ -3,6 +3,7 @@ import { json } from "body-parser";
 import dotenv from "dotenv";
 import userRoutes from "./routes/userRoutes";
 import itemRoutes from "./routes/itemRoutes";
+import policyRoutes from './routes/policyRoutes'
 import categoryRoutes from "./routes/catergoryRoutes";
 import cookieSession from 'cookie-session';
 import { errorHandler } from "./middleware/error-handler";
@@ -29,6 +30,7 @@ app.use(cors({
 app.use("/api/users", userRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/policy", policyRoutes)
 
 // app.all('*', async (req, res) => {
 //     throw new NotFoundError();

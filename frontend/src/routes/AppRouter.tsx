@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import NotFound from "@/pages/pageNotFound";
+import PolicyForm from "@/pages/policy";
 import PublicRoute from "./PublicRoute";
 import PrivateRoute from "./PrivateRoute";
 import { AppLayout } from "@/components/layouts/AppLayout";
@@ -43,6 +44,16 @@ const AppRouter = () => {
             <PrivateRoute>
               <AppLayout>
                 <Sales />
+              </AppLayout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/policy"
+          element={
+            <PrivateRoute>
+              <AppLayout>
+                <PolicyForm />
               </AppLayout>
             </PrivateRoute>
           }

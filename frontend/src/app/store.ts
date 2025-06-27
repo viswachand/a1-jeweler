@@ -5,7 +5,8 @@ import storage from 'redux-persist/lib/storage'; // localStorage
 import { combineReducers } from 'redux';
 import authReducer from '../features/auth/authSlice';
 import categoryReducer from '@/features/categories/categorySlice';
-
+import policyReducer from '@/features/policy/policySlice';
+import itemsReducer from "@/features/items/itemSlice"
 const persistConfig = {
     key: 'root',
     storage,
@@ -15,6 +16,8 @@ const persistConfig = {
 const rootReducer = combineReducers({
     auth: authReducer,
     categories: categoryReducer,
+    policies: policyReducer,
+    items: itemsReducer
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
