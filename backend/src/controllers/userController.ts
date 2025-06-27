@@ -6,8 +6,6 @@ import { RequestValidationError } from "../errors/request-validation-error";
 import { BadRequestError } from "../errors/badRequest-error";
 import { User } from "../models/userModel";
 
-
-console.log(typeof body);
 // User Registration Controller
 const signUp = asyncHandler(async (req: Request, res: Response) => {
     // Validate userID (assuming userID is your primary identifier)
