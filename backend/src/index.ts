@@ -19,20 +19,19 @@ app.use(json());
 
 app.use(json());
 
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "https://a1-jeweler-3.onrender.com");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    next();
-});
 
-app.use(
-    cors({
-        origin: "https://a1-jeweler-3.onrender.com",
-        credentials: true,
-    })
-);
+const allowedOrigins = ['https://vishrx.com', 'https://www.vishrx.com'];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
 
 app.use(
     cookieSession({
