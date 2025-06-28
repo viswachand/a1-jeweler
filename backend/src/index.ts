@@ -16,10 +16,13 @@ const app = express();
 
 app.use(json());
 
-app.use(cookieSession({
-    signed: false,
-    secure: process.env.NODE_ENV === 'production'
-}))
+app.use(
+    cookieSession({
+        signed: false,
+        secure: true,
+        sameSite: "none",
+    })
+);
 
 app.use(cors({
     origin: 'http://localhost:5173',
