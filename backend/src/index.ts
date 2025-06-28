@@ -33,12 +33,6 @@ app.use(
 );
 
 
-app.use(cors({
-    origin: 'http://localhost:5173',
-    credentials: true,
-}));
-
-
 app.use("/api/users", userRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
