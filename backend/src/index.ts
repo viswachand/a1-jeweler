@@ -14,11 +14,9 @@ import mongoose from "mongoose";
 dotenv.config();
 const app = express();
 
+app.set('trust proxy', 1)
+
 app.use(json());
-
-
-app.use(json());
-
 
 const allowedOrigins = ['https://vishrx.com', 'https://www.vishrx.com'];
 
