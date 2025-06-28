@@ -17,6 +17,16 @@ const app = express();
 app.use(json());
 
 
+app.use(json());
+
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "https://a1-jeweler-3.onrender.com");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    next();
+});
+
 app.use(
     cors({
         origin: "https://a1-jeweler-3.onrender.com",
@@ -31,7 +41,6 @@ app.use(
         sameSite: "none",
     })
 );
-
 app.use("/api/users", userRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
