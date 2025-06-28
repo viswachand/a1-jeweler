@@ -60,6 +60,7 @@ export default function AddItemForm() {
  
   const onSubmit = (data: ItemFormData) => {
     const payload = {
+      id: crypto.randomUUID(), // or use another unique id generator as appropriate
       ...data,
       customFloat: data.customFloat ? parseFloat(data.customFloat) : undefined,
     };

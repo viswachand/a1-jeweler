@@ -49,7 +49,8 @@ export default function ItemTable() {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => item.id && handleDelete(item.id)}
+                    disabled={!item.id}
                   >
                     Delete
                   </Button>

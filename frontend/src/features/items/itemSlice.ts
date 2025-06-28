@@ -28,7 +28,7 @@ export interface Item {
     sold?: boolean;
     soldDate?: string;
     soldPrice?: number;
-    id: string
+    id?: string
 }
 
 interface ItemState {
