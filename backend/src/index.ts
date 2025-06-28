@@ -24,6 +24,19 @@ app.use(
     })
 );
 
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://a1-jewelers-client.onrender.com",
+];
+
+app.use(
+    cors({
+        origin: allowedOrigins,
+        credentials: true,
+    })
+);
+
+
 app.use(cors({
     origin: 'http://localhost:5173',
     credentials: true,
