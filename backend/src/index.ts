@@ -9,6 +9,7 @@ import cookieSession from 'cookie-session';
 import { errorHandler } from "./middleware/error-handler";
 import cors from "cors";
 import mongoose from "mongoose";
+import path from "path";
 
 
 dotenv.config();
@@ -38,6 +39,11 @@ app.use(
         sameSite: "none",
     })
 );
+
+app.use(express.static('build')); // or 
+app.get('*', (req, res) => { res.sendFile(path.resolve(__dirname, 'build', 'index.html')); });
+
+
 app.use("/api/users", userRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
