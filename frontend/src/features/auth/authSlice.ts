@@ -47,7 +47,10 @@ export const fetchCurrentUser = createAsyncThunk<
     { rejectValue: string }
 >('auth/fetchCurrentUser', async (_, { rejectWithValue }) => {
     try {
-        const res = await API.get<{ currentUser: User }>('/users/currentuser');
+        const res = await API.get<{ currentUser: User }>('/users/currentuser', {
+            withCredentials: true,
+        });
+        console.log(res)
         return res.data?.currentUser || null;
     } catch (error: unknown) {
         return rejectWithValue('Unable to fetch user');
