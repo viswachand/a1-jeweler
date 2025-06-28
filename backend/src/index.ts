@@ -16,14 +16,6 @@ const app = express();
 
 app.use(json());
 
-app.use(
-    cookieSession({
-        signed: false,
-        secure: true,
-        sameSite: "none",
-    })
-);
-
 
 app.use(
     cors({
@@ -32,6 +24,13 @@ app.use(
     })
 );
 
+app.use(
+    cookieSession({
+        signed: false,
+        secure: true,
+        sameSite: "none",
+    })
+);
 
 app.use("/api/users", userRoutes);
 app.use("/api/items", itemRoutes);
