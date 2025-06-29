@@ -3,9 +3,9 @@ import { json } from "body-parser";
 import dotenv from "dotenv";
 import userRoutes from "./routes/userRoutes";
 import itemRoutes from "./routes/itemRoutes";
-import policyRoutes from './routes/policyRoutes';
+import policyRoutes from "./routes/policyRoutes";
 import categoryRoutes from "./routes/categoryRoutes";
-import cookieSession from 'cookie-session';
+import cookieSession from "cookie-session";
 import { errorHandler } from "./middleware/error-handler";
 import cors from "cors";
 import mongoose from "mongoose";
@@ -14,21 +14,23 @@ import path from "path";
 dotenv.config();
 const app = express();
 
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 app.use(json());
 
-const allowedOrigins = ['https://vishrx.com', 'https://www.vishrx.com'];
+const allowedOrigins = ["https://vishrx.com", "https://www.vishrx.com"];
 
-app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true
-}));
+app.use(
+    cors({
+        origin: function (origin, callback) {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error("Not allowed by CORS"));
+            }
+        },
+        credentials: true,
+    })
+);
 
 app.use(
     cookieSession({
@@ -43,28 +45,17 @@ app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/policy", policyRoutes);
 
+app.use(express.static(path.join(__dirname, "frontend", "dist")));
 
-// if (process.env.NODE_ENV === 'production') {
-//     app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
+app.use((req, res, next) => {
+    console.log(`[${req.method}] ${req.originalUrl}`);
+    next();
+});
 
-//     app.use((req, res, next) => {
-//         console.log(`[${req.method}] ${req.originalUrl}`);
-//         next();
-//     });
-
-//     app.get(/(.*)/, (req, res) => {
-//         console.log(`Serving index.html for unmatched route: ${req.originalUrl}`);
-//         res.sendFile(path.resolve(__dirname, 'frontend', 'dist', 'index.html'));
-//     });
-
-//     app.get('/', (req, res) => {
-//         console.log("Api is running");
-//         res.send("Api is running");
-//     })
-// }
-
-
-
+app.get(/(.*)/, (req, res) => {
+    console.log(`Serving index.html for unmatched route: ${req.originalUrl}`);
+    res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+});
 
 app.use(errorHandler);
 
