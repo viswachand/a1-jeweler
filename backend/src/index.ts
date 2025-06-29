@@ -44,24 +44,24 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/policy", policyRoutes);
 
 
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
+// if (process.env.NODE_ENV === 'production') {
+//     app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
 
-    app.use((req, res, next) => {
-        console.log(`[${req.method}] ${req.originalUrl}`);
-        next();
-    });
+//     app.use((req, res, next) => {
+//         console.log(`[${req.method}] ${req.originalUrl}`);
+//         next();
+//     });
 
-    app.get(/(.*)/, (req, res) => {
-        console.log(`Serving index.html for unmatched route: ${req.originalUrl}`);
-        res.sendFile(path.resolve(__dirname, 'frontend', 'dist', 'index.html'));
-    });
+//     app.get(/(.*)/, (req, res) => {
+//         console.log(`Serving index.html for unmatched route: ${req.originalUrl}`);
+//         res.sendFile(path.resolve(__dirname, 'frontend', 'dist', 'index.html'));
+//     });
 
-    app.get('/', (req, res) => {
-        console.log("Api is running");
-        res.send("Api is running");
-    })
-}
+//     app.get('/', (req, res) => {
+//         console.log("Api is running");
+//         res.send("Api is running");
+//     })
+// }
 
 
 
