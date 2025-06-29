@@ -50,9 +50,10 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get(/(.*)/, (req, res) => {
+app.get('/{*splat}', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
 });
+
 
 app.use(errorHandler);
 
