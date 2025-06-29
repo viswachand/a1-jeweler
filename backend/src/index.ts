@@ -3,20 +3,18 @@ import { json } from "body-parser";
 import dotenv from "dotenv";
 import userRoutes from "./routes/userRoutes";
 import itemRoutes from "./routes/itemRoutes";
-import policyRoutes from './routes/policyRoutes'
-import categoryRoutes from "./routes/catergoryRoutes";
+import policyRoutes from './routes/policyRoutes';
+import categoryRoutes from "./routes/categoryRoutes";
 import cookieSession from 'cookie-session';
 import { errorHandler } from "./middleware/error-handler";
 import cors from "cors";
 import mongoose from "mongoose";
 import path from "path";
 
-
 dotenv.config();
 const app = express();
 
-app.set('trust proxy', 1)
-
+app.set('trust proxy', 1);
 app.use(json());
 
 const allowedOrigins = ['https://vishrx.com', 'https://www.vishrx.com'];
@@ -40,18 +38,21 @@ app.use(
     })
 );
 
-app.use(express.static('build')); // or 
-app.get('*', (req, res) => { res.sendFile(path.resolve(__dirname, 'build', 'index.html')); });
-
-
 app.use("/api/users", userRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
-app.use("/api/policy", policyRoutes)
+app.use("/api/policy", policyRoutes);
 
-// app.all('*', async (req, res) => {
-//     throw new NotFoundError();
-// });
+app.use(express.static(path.resolve(__dirname, 'dist')));
+
+app.use((req, res, next) => {
+    console.log(`[${req.method}] ${req.originalUrl}`);
+    next();
+});
+
+app.get(/(.*)/, (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
+});
 
 app.use(errorHandler);
 
@@ -62,7 +63,7 @@ const start = async () => {
     } catch (err) {
         console.log("Error connecting to MongoDB:", err);
     }
-}
+};
 
 start();
 
