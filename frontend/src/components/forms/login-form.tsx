@@ -45,8 +45,10 @@ export function LoginForm({
       // dispatch could also handle this error if desired
       return;
     }
+   
 
     dispatch(loginUser({ userID: parsedUserID, password: parsedPassword }));
+
   };
 
   return (
