@@ -52,7 +52,7 @@ if (process.env.NODE_ENV === 'production') {
         next();
     });
 
-    app.get('*', (req, res) => {
+    app.get(/(.*)/, (req, res) => {
         console.log(`Serving index.html for unmatched route: ${req.originalUrl}`);
         res.sendFile(path.resolve(__dirname, 'frontend', 'dist', 'index.html'));
     });
