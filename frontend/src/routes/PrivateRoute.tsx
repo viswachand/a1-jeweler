@@ -19,7 +19,7 @@ const PrivateRoute = ({ children }: Props) => {
 
   useIdleLogout(30 * 1000);
 
-  return isAuthenticated && isClockedIn ? children : <Navigate to="/login" replace />;
+  return isAuthenticated && isClockedIn ? children : <Navigate to="/" replace />;
 };
 
 export default PrivateRoute;
