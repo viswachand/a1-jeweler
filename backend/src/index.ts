@@ -51,7 +51,7 @@ app.use("/api/policy", policyRoutes);
 app.use("/api/clock", clockSummmaryRoutes);
 
 // 🧱 Serve Frontend
-// app.use(express.static(path.join(__dirname, "frontend", "dist")));
+app.use(express.static(path.join(__dirname, "frontend", "dist")));
 
 // app.get("*", (_req, res) => {
 //     res.sendFile(path.resolve(__dirname, "../frontend", "dist", "index.html"));
