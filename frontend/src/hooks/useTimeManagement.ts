@@ -22,12 +22,12 @@ export const useTimeManagementController = () => {
   }, []);
 
   const handleLoginSuccess = useCallback(
-    async (id: string, loginToken: string) => {
+    async (id: string) => {
       setUserId(id);
 
       if (loginPurpose === "ringSale") {
         try {
-          const validated = await dispatch(validateRingSaleAccess({ userID: id, token: loginToken })).unwrap();
+          const validated = await dispatch(validateRingSaleAccess({ userID: id })).unwrap();
           if (validated) {
             navigate("/dashboard");
           } else {

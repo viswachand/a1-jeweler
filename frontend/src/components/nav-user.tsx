@@ -1,13 +1,6 @@
-import {
-  LogOutIcon,
-  MoreVerticalIcon,
-} from "lucide-react";
+import { LogOutIcon, MoreVerticalIcon } from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,29 +18,27 @@ import {
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { logoutUserById } from "@/features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
+import { selectCurrentUser } from "@/features/auth/currentUser";
 
-interface NavUserProps {
-  userId: string;
-}
 
-export function NavUser({ userId }: NavUserProps) {
+export function NavUser() {
   const { isMobile } = useSidebar();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const userSession = useAppSelector((state) => state.auth.loggedInuser[userId]);
+  const currentUser = useAppSelector(selectCurrentUser);
 
   const handleLogout = async () => {
-    if (userId) {
-      dispatch(logoutUserById(userId));
+    if (currentUser?.id) {
+      dispatch(logoutUserById(currentUser?.id));
     }
     navigate("/login");
   };
 
-  if (!userSession?.user) return null;
+  if (!currentUser?.id) return null;
 
-  const { name, userID } = userSession.user;
-  const firstLetter = name?.charAt(0)?.toUpperCase() || "U";
+  const { name, userID } = currentUser;
+  const firstLetter = name?.charAt(0)?.toUpperCase() || "V";
 
   return (
     <SidebarMenu>
@@ -60,7 +51,9 @@ export function NavUser({ userId }: NavUserProps) {
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
                 <AvatarImage src="" alt={name} />
-                <AvatarFallback className="rounded-lg">{firstLetter}</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {firstLetter}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{name}</span>
@@ -82,7 +75,9 @@ export function NavUser({ userId }: NavUserProps) {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src="" alt={name} />
-                  <AvatarFallback className="rounded-lg">{firstLetter}</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {firstLetter}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{name}</span>

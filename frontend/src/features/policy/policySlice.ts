@@ -1,8 +1,8 @@
 // src/features/policies/policySlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { API } from "@/services/axios";
 import axios from "axios";
 
-// Types
 export interface Policy {
     id: string;
     title: string;
@@ -21,69 +21,79 @@ const initialState: PolicyState = {
     error: null,
 };
 
-// API Base
-const API_BASE =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api";
-
-// Thunks
-
+// Create Policy
 export const createPolicy = createAsyncThunk<
     Policy,
-    { title: string; description: string },
+    { title: string; description: string; token: string },
     { rejectValue: string }
->("policies/create", async (data, { rejectWithValue }) => {
+>("policies/create", async ({ title, description, token }, { rejectWithValue }) => {
     try {
-        const response = await axios.post(`${API_BASE}/policy/create`, data, {
-            withCredentials: true,
+        const response = await API.post<Policy>("/policy/create", { title, description }, {
+            headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(response);
         return response.data;
-    } catch (error: unknown) {
-        console.log(error);
-        if (axios.isAxiosError(error) && error.response) {
-            return rejectWithValue(
-                error.response.data.errors[0]?.message || "Failed to create policy"
-            );
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const backendMessage =
+                error.response?.data?.errors?.[0]?.message ||
+                error.response?.data?.message ||
+                error.message;
+
+            console.error("[Login Axios Error]", backendMessage, error.response?.data);
+
+            return rejectWithValue(backendMessage || "Login failed due to server error.");
         }
         return rejectWithValue("Failed to create policy");
     }
 });
 
+// Fetch Policies
 export const fetchPolicies = createAsyncThunk<
     Policy[],
-    void,
+    string,
     { rejectValue: string }
->("policies/fetch", async (_, { rejectWithValue }) => {
+>("policies/fetch", async (token, { rejectWithValue }) => {
     try {
-        const response = await axios.get(`${API_BASE}/policy/get`, {
-            withCredentials: true,
+        const response = await API.get("/policy/get", {
+            headers: { Authorization: `Bearer ${token}` },
         });
         return response.data;
-    } catch (error: unknown) {
-        if (axios.isAxiosError(error) && error.response) {
-            return rejectWithValue(
-                error.response.data.errors[0]?.message || "Failed to fetch policies"
-            );
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const backendMessage =
+                error.response?.data?.errors?.[0]?.message ||
+                error.response?.data?.message ||
+                error.message;
+
+            console.error("[Login Axios Error]", backendMessage, error.response?.data);
+
+            return rejectWithValue(backendMessage || "Login failed due to server error.");
         }
         return rejectWithValue("Failed to fetch policies");
     }
 });
 
+// Delete Policy
 export const deletePolicy = createAsyncThunk<
     string,
-    string,
+    { id: string; token: string },
     { rejectValue: string }
->("policies/delete", async (id, { rejectWithValue }) => {
+>("policies/delete", async ({ id, token }, { rejectWithValue }) => {
     try {
-        await axios.delete(`${API_BASE}/policy/delete/${id}`, {
-            withCredentials: true,
+        await API.delete(`/policy/delete/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
         });
         return id;
     } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-            return rejectWithValue(
-                error.response.data.errors[0]?.message || "Failed to delete policy"
-            );
+        if (axios.isAxiosError(error)) {
+            const backendMessage =
+                error.response?.data?.errors?.[0]?.message ||
+                error.response?.data?.message ||
+                error.message;
+
+            console.error("[Login Axios Error]", backendMessage, error.response?.data);
+
+            return rejectWithValue(backendMessage || "Login failed due to server error.");
         }
         return rejectWithValue("Failed to delete policy");
     }
@@ -92,30 +102,29 @@ export const deletePolicy = createAsyncThunk<
 // Update Policy
 export const updatePolicy = createAsyncThunk<
     Policy,
-    { id: string; title: string; description: string },
+    { id: string; title: string; description: string; token: string },
     { rejectValue: string }
->(
-    "policies/update",
-    async ({ id, title, description }, { rejectWithValue }) => {
-        try {
-            const response = await axios.put(
-                `${API_BASE}/policy/update/${id}`,
-                { id, title, description },
-                { withCredentials: true }
-            );
-            return response.data;
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                return rejectWithValue(
-                    error.response.data.errors[0]?.message || "Failed to update policy"
-                );
-            }
-            return rejectWithValue("Failed to update policy");
-        }
-    }
-);
+>("policies/update", async ({ id, title, description, token }, { rejectWithValue }) => {
+    try {
+        const response = await API.put(`/policy/update/${id}`, { title, description }, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.data;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const backendMessage =
+                error.response?.data?.errors?.[0]?.message ||
+                error.response?.data?.message ||
+                error.message;
 
-// Slice
+            console.error("[Login Axios Error]", backendMessage, error.response?.data);
+
+            return rejectWithValue(backendMessage || "Login failed due to server error.");
+        }
+        return rejectWithValue("Failed to update policy");
+    }
+});
+
 const policySlice = createSlice({
     name: "policies",
     initialState,
@@ -146,20 +155,20 @@ const policySlice = createSlice({
             .addCase(fetchPolicies.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Error fetching policies";
+            })
+
+            // Delete
+            .addCase(deletePolicy.fulfilled, (state, action) => {
+                state.policies = state.policies.filter((p) => p.id !== action.payload);
+            })
+
+            // Update
+            .addCase(updatePolicy.fulfilled, (state, action) => {
+                const index = state.policies.findIndex((p) => p.id === action.payload.id);
+                if (index !== -1) {
+                    state.policies[index] = action.payload;
+                }
             });
-
-        // // Delete
-        // .addCase(deletePolicy.fulfilled, (state, action) => {
-        //     state.policies = state.policies.filter((p) => p._id !== action.payload);
-        // })
-
-        // // Update
-        // .addCase(updatePolicy.fulfilled, (state, action) => {
-        //     const index = state.policies.findIndex((p) => p._id === action.payload._id);
-        //     if (index !== -1) {
-        //         state.policies[index] = action.payload;
-        //     }
-        // });
     },
 });
 

@@ -23,7 +23,7 @@ import clockSummaryReducer from "@/features/clockIn/clockSummary";
 const persistConfig = {
     key: "root",
     storage,
-    whitelist: ["user", "clock"],
+    whitelist: ["user", "clock", "auth"],
 };
 
 const rootReducer = combineReducers({
