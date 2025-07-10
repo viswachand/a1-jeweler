@@ -53,9 +53,10 @@ app.use("/api/clock", clockSummmaryRoutes);
 // 🧱 Serve Frontend
 app.use(express.static(path.join(__dirname, "frontend", "dist")));
 
-// app.get("*", (_req, res) => {
-//     res.sendFile(path.resolve(__dirname, "../frontend", "dist", "index.html"));
-// });
+app.get('/{*splat}', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
+});
+
 
 // 🧠 Global Error Handler
 app.use(errorHandler);
