@@ -106,9 +106,9 @@ export const { clearAuthError, logoutUserById } = authSlice.actions;
 
 // Selectors
 export const selectUserById = (state: RootState, id: string) =>
-    state.auth.loggedInuser[id]?.user;
+    state.auth.loggedInuser?.[id]?.user ?? null;
 
 export const selectTokenById = (state: RootState, id: string) =>
-    state.auth.loggedInuser[id]?.token;
+    state.auth.loggedInuser?.[id]?.token ?? null;
 
 export default authSlice.reducer;
