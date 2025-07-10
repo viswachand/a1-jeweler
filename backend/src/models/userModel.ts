@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
 // import { Password } from "../services/password";
 
-interface UserAttrs {
+export interface UserAttrs {
     name: string;
     userID: number;
     password: number;
     admin: boolean;
 }
+
 
 interface UserModel extends mongoose.Model<UserDoc> {
     build(attrs: UserAttrs): UserDoc;

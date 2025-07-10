@@ -1,5 +1,3 @@
-// src/components/layout/AppLayout.tsx
-
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import {

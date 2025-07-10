@@ -1,34 +1,56 @@
-// src/redux/store.ts
-import { configureStore } from '@reduxjs/toolkit';
-import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage'; // localStorage
-import { combineReducers } from 'redux';
-import authReducer from '../features/auth/authSlice';
-import categoryReducer from '@/features/categories/categorySlice';
-import policyReducer from '@/features/policy/policySlice';
-import itemsReducer from "@/features/items/itemSlice"
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import {
+    persistStore,
+    persistReducer,
+    FLUSH,
+    REHYDRATE,
+    PAUSE,
+    PERSIST,
+    PURGE,
+    REGISTER,
+} from "redux-persist";
+import storage from "redux-persist/lib/storage";
+
+import authReducer from "@/features/auth/authSlice";
+import currentUserReducer from "@/features/auth/currentUser";
+import categoryReducer from "@/features/categories/categorySlice";
+import policyReducer from "@/features/policy/policySlice";
+import itemsReducer from "@/features/items/itemSlice";
+import clockReducer from "@/features/clockIn/clockIn";
+import clockSummaryReducer from "@/features/clockIn/clockSummary";
+
+
 const persistConfig = {
-    key: 'root',
+    key: "root",
     storage,
-    whitelist: ['auth'], // Only persist auth slice
+    whitelist: ["user", "clock"],
 };
 
 const rootReducer = combineReducers({
     auth: authReducer,
+    user: currentUserReducer,
     categories: categoryReducer,
     policies: policyReducer,
-    items: itemsReducer
+    items: itemsReducer,
+    clock: clockReducer,
+    clockSummary: clockSummaryReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
+
 
 export const store = configureStore({
     reducer: persistedReducer,
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
-            serializableCheck: false, // Required for redux-persist
+            serializableCheck: {
+                // Required by redux-persist to avoid middleware warnings
+                ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+            },
         }),
+    devTools: process.env.NODE_ENV !== "production",
 });
+
 
 export const persistor = persistStore(store);
 

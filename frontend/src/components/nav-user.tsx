@@ -23,27 +23,31 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { logoutUser } from "@/features/auth/authSlice";
-import { persistor } from "@/app/store";
+import { logoutUserById } from "@/features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 
-export function NavUser() {
+interface NavUserProps {
+  userId: string;
+}
+
+export function NavUser({ userId }: NavUserProps) {
   const { isMobile } = useSidebar();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  // Get current user from Redux
-  const user = useAppSelector((state) => state.auth.currentUser);
+  const userSession = useAppSelector((state) => state.auth.loggedInuser[userId]);
 
   const handleLogout = async () => {
-    await dispatch(logoutUser());
-    await persistor.purge();
+    if (userId) {
+      dispatch(logoutUserById(userId));
+    }
     navigate("/login");
   };
 
-  if (!user) return null; // Optional: render nothing or a skeleton if user is null
+  if (!userSession?.user) return null;
 
-  const firstLetter = user.name?.charAt(0)?.toUpperCase() || "U";
+  const { name, userID } = userSession.user;
+  const firstLetter = name?.charAt(0)?.toUpperCase() || "U";
 
   return (
     <SidebarMenu>
@@ -55,13 +59,13 @@ export function NavUser() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src="" alt={user.name} />
+                <AvatarImage src="" alt={name} />
                 <AvatarFallback className="rounded-lg">{firstLetter}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate font-medium">{name}</span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {user.userID}
+                  {userID}
                 </span>
               </div>
               <MoreVerticalIcon className="ml-auto size-4" />
@@ -77,13 +81,13 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src="" alt={user.name} />
+                  <AvatarImage src="" alt={name} />
                   <AvatarFallback className="rounded-lg">{firstLetter}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
+                  <span className="truncate font-medium">{name}</span>
                   <span className="truncate text-xs text-muted-foreground">
-                    {user.userID}
+                    {userID}
                   </span>
                 </div>
               </div>

@@ -6,24 +6,29 @@ import { RequestValidationError } from "../errors/request-validation-error";
 import { BadRequestError } from "../errors/badRequest-error";
 import { User } from "../models/userModel";
 
-// User Registration Controller
-const signUp = asyncHandler(async (req: Request, res: Response) => {
-    // Validate userID (assuming userID is your primary identifier)
-    body("userID").notEmpty().withMessage("UserID is required").run(req);
+interface userPayload {
+    userID: number;
+    name: string;
+    admin: boolean;
+    id: string;
+}
 
-    // Validate password length
-    body("password")
+// Helper to generate JWT
+const generateToken = (user: userPayload): string => {
+    return jwt.sign(user, process.env.JWT_KEY!, { expiresIn: "2h" });
+};
+
+// @desc    Register user
+// @route   POST /api/users/signup
+export const signUp = asyncHandler(async (req: Request, res: Response) => {
+    await body("userID").notEmpty().withMessage("UserID is required").run(req);
+    await body("password")
         .isLength({ min: 2, max: 4 })
-        .withMessage(
-            "Password must be at least 2 characters and at most 4 characters"
-        )
+        .withMessage("Password must be 2–4 characters long")
         .run(req);
-
-    // Validate name
-    body("name").notEmpty().withMessage("Name is required").run(req);
+    await body("name").notEmpty().withMessage("Name is required").run(req);
 
     const errors = validationResult(req);
-
     if (!errors.isEmpty()) {
         throw new RequestValidationError(errors.array());
     }
@@ -31,34 +36,27 @@ const signUp = asyncHandler(async (req: Request, res: Response) => {
     const { name, userID, password, admin } = req.body;
 
     const existingUser = await User.findOne({ userID });
-
     if (existingUser) {
         throw new BadRequestError("User already exists with this userID");
     }
 
-    const user = User.build({
-        name,
-        userID,
-        password,
-        admin,
-    });
-
+    const user = User.build({ name, userID, password, admin });
     await user.save();
 
-    res.status(201).json(user);
+    res.status(201).json({ message: "User created successfully", user });
 });
 
-const signIn = asyncHandler(async (req: Request, res: Response) => {
-    body("userID").notEmpty().withMessage("UserID is required").run(req);
-
-    // Validate password length
-    body("password")
+// @desc    Login user and return JWT
+// @route   POST /api/users/login
+export const signIn = asyncHandler(async (req: Request, res: Response) => {
+    await body("userID").notEmpty().withMessage("UserID is required").run(req);
+    await body("password")
         .trim()
         .notEmpty()
-        .withMessage("You must apply a password")
+        .withMessage("You must supply a password")
         .run(req);
-    const errors = validationResult(req);
 
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
         throw new RequestValidationError(errors.array());
     }
@@ -66,38 +64,31 @@ const signIn = asyncHandler(async (req: Request, res: Response) => {
     const { userID, password } = req.body;
     const user = await User.findOne({ userID });
 
-    if (!user) {
+    if (!user || String(user.password) !== String(password)) {
         throw new BadRequestError("Invalid userID or password");
     }
 
-    if (String(user.password) !== String(password)) {
-        throw new BadRequestError("Invalid userID or password");
-    }
+    const userJwt = generateToken({
+        userID: user.userID,
+        name: user.name,
+        admin: user.admin,
+        id: user.id.toString(),
+    });
 
-    const userJwt = jwt.sign(
-        {
+    res.status(200).json({
+        message: "Login successful",
+        token: userJwt,
+        user: {
             userID: user.userID,
             name: user.name,
             admin: user.admin,
+            id: user.id.toString(),
         },
-        process.env.JWT_KEY!
-    );
-
-    // store it on session object
-
-    req.session = {
-        jwt: userJwt,
-    };
-    res.status(200).send(user);
+    });
 });
 
-const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
-    res.status(200).send({ currentUser: req.currentUser || null });
+// @desc    Get current authenticated user (via Bearer token)
+// @route   GET /api/users/currentuser
+export const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
+    res.status(200).json({ currentUser: req.currentUser || null });
 });
-
-const signOut = asyncHandler(async (req: Request, res: Response) => {
-    req.session = null;
-    res.send({});
-});
-
-export { signUp, signIn, signOut, getCurrentUser };

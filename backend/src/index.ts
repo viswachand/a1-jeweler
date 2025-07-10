@@ -9,6 +9,7 @@ import cookieSession from "cookie-session";
 import { errorHandler } from "./middleware/error-handler";
 import cors from "cors";
 import mongoose from "mongoose";
+import clockSummmaryRoutes from "./routes/clockSummaryRoutes"
 import path from "path";
 
 dotenv.config();
@@ -17,7 +18,11 @@ const app = express();
 app.set("trust proxy", 1);
 app.use(json());
 
-const allowedOrigins = ["https://vishrx.com", "https://www.vishrx.com"];
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://vishrx.com",
+    "https://www.vishrx.com"
+];
 
 app.use(
     cors({
@@ -35,8 +40,8 @@ app.use(
 app.use(
     cookieSession({
         signed: false,
-        secure: true,
-        sameSite: "none",
+        secure: false,
+        sameSite: "lax",
     })
 );
 
@@ -44,18 +49,18 @@ app.use("/api/users", userRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/policy", policyRoutes);
+app.use("/api/clock", clockSummmaryRoutes)
+// app.use(express.static(path.join(__dirname, "frontend", "dist")));
 
-app.use(express.static(path.join(__dirname, "frontend", "dist")));
+// app.use((req, res, next) => {
+//     console.log(`[${req.method}] ${req.originalUrl}`);
+//     next();
+// });
 
-app.use((req, res, next) => {
-    console.log(`[${req.method}] ${req.originalUrl}`);
-    next();
-});
-
-app.get(/(.*)/, (req, res) => {
-    console.log(`Serving index.html for unmatched route: ${req.originalUrl}`);
-    res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
-});
+// app.get(/(.*)/, (req, res) => {
+//     console.log(`Serving index.html for unmatched route: ${req.originalUrl}`);
+//     res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+// });
 
 app.use(errorHandler);
 

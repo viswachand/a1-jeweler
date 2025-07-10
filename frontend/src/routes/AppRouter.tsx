@@ -1,4 +1,3 @@
-// src/routes/AppRouter.tsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
@@ -14,10 +13,9 @@ const AppRouter = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Redirect base path */}
-        <Route path="/" element={<Navigate to="/dashboard" />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Public Route for Login */}
+        {/* Public Login Route */}
         <Route
           path="/login"
           element={
@@ -27,7 +25,7 @@ const AppRouter = () => {
           }
         />
 
-        {/* Private Route for Dashboard inside Layout */}
+        {/* Protected Routes */}
         <Route
           path="/dashboard"
           element={
@@ -38,6 +36,7 @@ const AppRouter = () => {
             </PrivateRoute>
           }
         />
+
         <Route
           path="/sales"
           element={
@@ -48,6 +47,7 @@ const AppRouter = () => {
             </PrivateRoute>
           }
         />
+
         <Route
           path="/policy"
           element={
@@ -58,6 +58,7 @@ const AppRouter = () => {
             </PrivateRoute>
           }
         />
+
         <Route
           path="/items"
           element={
@@ -69,7 +70,7 @@ const AppRouter = () => {
           }
         />
 
-        {/* Fallback Not Found */}
+        {/* Fallback Route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

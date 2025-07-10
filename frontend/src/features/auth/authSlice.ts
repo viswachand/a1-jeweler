@@ -1,72 +1,86 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import type { RootState } from "@/app/store";
+import { API } from "@/services/axios";
+import axios from "axios";
 
+// Types
 export interface User {
     userID: number;
     name: string;
+    id: string;
     admin: boolean;
 }
 
+interface UserSession {
+    user: User;
+    token: string;
+}
+
 interface AuthState {
-    currentUser: User | null;
+    loggedInuser: {
+        [id: string]: UserSession;
+    };
     isLoading: boolean;
     error: string | null;
 }
 
 const initialState: AuthState = {
-    currentUser: null,
+    loggedInuser: {},
     isLoading: false,
     error: null,
 };
 
-const API = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api/users',
-    withCredentials: true,
-});
+// Async thunk for logging in a user
+interface LoginRequest {
+    userID: number;
+    password: number;
+}
+
+interface LoginResponse {
+    token: string;
+    user: User;
+}
 
 export const loginUser = createAsyncThunk<
-    User,
-    { userID: number; password: number },
+    LoginResponse,
+    LoginRequest,
     { rejectValue: string }
->('auth/loginUser', async ({ userID, password }, { rejectWithValue }) => {
+>("auth/loginUser", async ({ userID, password }, { rejectWithValue }) => {
     try {
-        await API.post('/users/login', { userID, password });
-        const res = await API.get<{ currentUser: User }>('/users/currentuser');
-        return res.data.currentUser;
-    } catch (error: unknown) {
-        if (axios.isAxiosError(error) && error.response) {
-            return rejectWithValue(error.response.data?.errors?.[0]?.message || 'Login failed');
-        }
-        return rejectWithValue('Login failed');
-    }
-});
-
-export const fetchCurrentUser = createAsyncThunk<
-    User | null,
-    void,
-    { rejectValue: string }
->('auth/fetchCurrentUser', async (_, { rejectWithValue }) => {
-    try {
-        const res = await API.get<{ currentUser: User }>('/users/currentuser', {
-            withCredentials: true,
+        const response = await API.post<LoginResponse>("/users/login", {
+            userID,
+            password,
         });
-        console.log(res)
-        return res.data?.currentUser || null;
-    } catch (error: unknown) {
-        return rejectWithValue('Unable to fetch user');
+
+        return response.data;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const backendMessage =
+                error.response?.data?.errors?.[0]?.message ||
+                error.response?.data?.message ||
+                error.message;
+
+            console.error("[Login Axios Error]", backendMessage, error.response?.data);
+
+            return rejectWithValue(backendMessage || "Login failed due to server error.");
+        }
+
+        console.error("[Login Unknown Error]", error);
+        return rejectWithValue("Unexpected error during login.");
     }
 });
 
-export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
-    await API.get('/users/logout');
-});
 
+// Slice
 const authSlice = createSlice({
-    name: 'auth',
+    name: "auth",
     initialState,
     reducers: {
         clearAuthError(state) {
             state.error = null;
+        },
+        logoutUserById(state, action) {
+            delete state.loggedInuser[action.payload];
         },
     },
     extraReducers: (builder) => {
@@ -77,32 +91,24 @@ const authSlice = createSlice({
             })
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.currentUser = action.payload;
+                const { user, token } = action.payload;
+                state.loggedInuser[user.id] = { user, token };
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.isLoading = false;
-                state.error = action.payload || 'Login failed';
-            })
-            .addCase(fetchCurrentUser.pending, (state) => {
-                state.isLoading = true;
-            })
-            .addCase(fetchCurrentUser.fulfilled, (state, action) => {
-                state.isLoading = false;
-                state.currentUser = action.payload;
-            })
-            .addCase(fetchCurrentUser.rejected, (state, action) => {
-                state.isLoading = false;
-                state.error = action.payload || 'Unable to fetch user';
-            })
-            .addCase(logoutUser.fulfilled, (state) => {
-                state.currentUser = null;
-            })
-            .addCase(logoutUser.rejected, (state) => {
-                state.error = 'Logout failed';
+                state.error = action.payload || "Login failed";
             });
     },
 });
 
-export const { clearAuthError } = authSlice.actions;
+// Actions
+export const { clearAuthError, logoutUserById } = authSlice.actions;
+
+// Selectors
+export const selectUserById = (state: RootState, id: string) =>
+    state.auth.loggedInuser[id]?.user;
+
+export const selectTokenById = (state: RootState, id: string) =>
+    state.auth.loggedInuser[id]?.token;
 
 export default authSlice.reducer;

@@ -6,7 +6,7 @@ import { AppLayout } from "@/components/layouts/AppLayout";
 import { RootState } from "@/app/store";
 
 const LayoutRoute = ({ element }: { element: JSX.Element }) => {
-  const currentUser = useSelector((state: RootState) => state.auth.currentUser);
+  const currentUser = useSelector((state: RootState) => state.user.currentUser);
 
   if (!currentUser) return <Navigate to="/login" />;
 
