@@ -3,18 +3,22 @@ import { useDispatch } from "react-redux";
 import { loginUser } from "@/features/auth/authSlice";
 import type { AppDispatch } from "@/app/store";
 
-
 interface TimePunchDialogProps {
   onClose: () => void;
-  onLoginSuccess: (id: string, token: string) => void; 
+  onLoginSuccess: (id: string, token: string) => void;
 }
 
-const TimePunchDialog: React.FC<TimePunchDialogProps> = ({ onClose, onLoginSuccess }) => {
+const TimePunchDialog: React.FC<TimePunchDialogProps> = ({
+  onClose,
+  onLoginSuccess,
+}) => {
   const dispatch = useDispatch<AppDispatch>();
 
   const [userID, setUserID] = useState("");
   const [password, setPassword] = useState("");
-  const [activeField, setActiveField] = useState<"userID" | "password">("userID");
+  const [activeField, setActiveField] = useState<"userID" | "password">(
+    "userID"
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -43,11 +47,15 @@ const TimePunchDialog: React.FC<TimePunchDialogProps> = ({ onClose, onLoginSucce
       const result = await dispatch(
         loginUser({ userID: parsedUserID, password: parsedPassword })
       ).unwrap();
-    
-      onLoginSuccess(result.user.id, result.token);
-      setError("");
-      handleClear();
-      onClose();
+
+      if (result?.user?.id && result?.token) {
+        onLoginSuccess(result.user.id, result.token);
+        setError("");
+        handleClear();
+        onClose();
+      } else {
+        setError("Login succeeded but response was incomplete.");
+      }
     } catch (error) {
       setError(typeof error === "string" ? error : "Something went wrong.");
     } finally {
