@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
 import type { RootState } from "@/app/store";
+import { API } from "@/services/axios"; // ✅ uses shared Axios config
+import axios from "axios";
 
-// Types
+// --- Types ---
 export interface User {
     userID: number;
     name: string;
@@ -22,12 +23,7 @@ const initialState: AuthState = {
     error: null,
 };
 
-// Axios base config
-const API = axios.create({
-    baseURL: "http://localhost:4000/api",
-});
-
-// Thunk: Fetch user info using Bearer token
+// --- Thunk: Fetch current user via token ---
 export const fetchCurrentUser = createAsyncThunk<
     User | null,
     string,
@@ -39,7 +35,7 @@ export const fetchCurrentUser = createAsyncThunk<
                 Authorization: `Bearer ${token}`,
             },
         });
-        return res.data?.currentUser || null;
+        return res.data?.currentUser ?? null;
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
             return rejectWithValue(
@@ -48,11 +44,11 @@ export const fetchCurrentUser = createAsyncThunk<
                 "Unable to fetch user"
             );
         }
-        return rejectWithValue("Unable to fetch user");
+        return rejectWithValue("Unexpected error while fetching user");
     }
 });
 
-// Slice
+// --- Slice ---
 const currentUserSlice = createSlice({
     name: "currentUser",
     initialState,
@@ -67,12 +63,13 @@ const currentUserSlice = createSlice({
             state.currentUser = null;
             state.isLoading = false;
             state.error = null;
-        }
+        },
     },
     extraReducers: (builder) => {
         builder
             .addCase(fetchCurrentUser.pending, (state) => {
                 state.isLoading = true;
+                state.error = null;
             })
             .addCase(fetchCurrentUser.fulfilled, (state, action) => {
                 state.isLoading = false;
@@ -85,9 +82,10 @@ const currentUserSlice = createSlice({
     },
 });
 
+// --- Actions ---
 export const { clearAuthError, clearCurrentUser, logout } = currentUserSlice.actions;
 
-// Selector
+// --- Selector (corrected key) ---
 export const selectCurrentUser = (state: RootState) => state.user.currentUser;
 
 export default currentUserSlice.reducer;
