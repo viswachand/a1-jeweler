@@ -11,7 +11,8 @@ export const validateRingSaleAccess = createAsyncThunk<
     ValidationParams,
     { state: RootState }
 >("auth/validateRingSaleAccess", async ({ userID }, { dispatch, getState }) => {
-    const token = getState().auth.loggedInuser[userID]?.token;
+    const token = userID ? getState().auth.loggedInuser[userID]?.token : null;
+    if (!token) throw new Error("Missing token");
     await dispatch(fetchCurrentUser(token)).unwrap();
     const isClockedIn = getState().clock.usersClockData[userID]?.isClockedIn;
 

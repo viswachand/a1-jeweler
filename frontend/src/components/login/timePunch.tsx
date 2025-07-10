@@ -24,9 +24,10 @@ const TimePunch: React.FC<TimePunchProps> = ({ id, token }) => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const userDetails = useAppSelector((state: RootState) =>
-    id ? state.auth.loggedInuser[id]?.user : null
-  );
+  const userDetails = useAppSelector((state: RootState) => {
+    if (!id || !state.auth.loggedInuser[id]) return null;
+    return state.auth.loggedInuser[id].user;
+  });
 
   const fetchUserClockData = useCallback(async () => {
     try {
