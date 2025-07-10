@@ -56,8 +56,9 @@ const TimePunchDialog: React.FC<TimePunchDialogProps> = ({
       } else {
         setError("Login succeeded but response was incomplete.");
       }
-    } catch (error) {
-      setError(typeof error === "string" ? error : "Something went wrong.");
+    }catch (error) {
+      console.error("Login failed:", error);
+      setError(typeof error === "string" ? error : "Login error occurred.");
     } finally {
       setLoading(false);
     }
