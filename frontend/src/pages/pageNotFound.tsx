@@ -11,7 +11,7 @@ const NotFound = () => {
       <p className="mb-6 text-sm text-muted-foreground">
         Sorry, the page you are looking for does not exist or has been moved.
       </p>
-      <Button onClick={() => navigate("/login")}>LogIn</Button>
+      <Button onClick={() => navigate("/")}>LogIn</Button>
     </div>
   );
 };

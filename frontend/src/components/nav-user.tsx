@@ -31,8 +31,9 @@ export function NavUser() {
   const handleLogout = async () => {
     if (currentUser?.id) {
       dispatch(logoutUserById(currentUser?.id));
+      localStorage.removeItem("persist:user");
     }
-    navigate("/login");
+    navigate("/");
   };
 
   if (!currentUser?.id) return null;
