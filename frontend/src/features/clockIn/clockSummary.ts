@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { API } from "@/services/axios";
 import axios from "axios";
 
 // --- Types ---
-interface UserClock {
+export interface UserClock {
     employeeName: {
         name: string;
         userID: number;
@@ -26,64 +27,64 @@ const initialState: ClockInState = {
     error: null,
 };
 
+// --- Thunks ---
+
 export const getUserClock = createAsyncThunk<
     UserClock[],
     { id: string; token: string },
     { rejectValue: string }
 >("clockIn/getUserClock", async ({ id, token }, { rejectWithValue }) => {
     try {
-        const res = await axios.get<UserClock[]>(
-            `http://localhost:4000/api/clock/${id}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
+        const res = await API.get<UserClock[]>(`/clock/${id}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
         return res.data;
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
             return rejectWithValue(
-                error.response.data?.message || "Failed to fetch clock-in data"
+                error.response.data?.errors?.[0]?.message ||
+                error.response.data?.message ||
+                "Failed to fetch user clock data"
             );
         }
-        return rejectWithValue("Failed to fetch clock-in data");
+        return rejectWithValue("Unexpected error while fetching user clock");
     }
 });
 
-// ✅ Get clock summary for all users (admin only)
 export const getClockSummary = createAsyncThunk<
     UserClock[],
     string, // token
     { rejectValue: string }
 >("clockIn/getClockSummary", async (token, { rejectWithValue }) => {
     try {
-        const res = await axios.get<UserClock[]>(
-            `http://localhost:4000/api/clock/clockSummary`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
+        const res = await API.get<UserClock[]>("/clock/clockSummary", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
         return res.data;
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
             return rejectWithValue(
-                error.response.data?.message || "Failed to fetch summary"
+                error.response.data?.errors?.[0]?.message ||
+                error.response.data?.message ||
+                "Failed to fetch clock summary"
             );
         }
-        return rejectWithValue("Failed to fetch summary");
+        return rejectWithValue("Unexpected error while fetching summary");
     }
 });
 
+// --- Slice ---
 const clockSummarySlice = createSlice({
     name: "clockSummary",
     initialState,
     reducers: {},
     extraReducers: (builder) => {
         builder
-            // Handle getUserClock
+            // getUserClock
             .addCase(getUserClock.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -94,10 +95,10 @@ const clockSummarySlice = createSlice({
             })
             .addCase(getUserClock.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload || "Could not load clock records";
+                state.error = action.payload || "Unable to load clock data";
             })
 
-            // Handle getClockSummary
+            // getClockSummary
             .addCase(getClockSummary.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -108,7 +109,7 @@ const clockSummarySlice = createSlice({
             })
             .addCase(getClockSummary.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload || "Could not load summary";
+                state.error = action.payload || "Unable to load summary";
             });
     },
 });

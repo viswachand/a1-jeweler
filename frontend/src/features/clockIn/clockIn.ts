@@ -1,20 +1,21 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { API } from "@/services/axios";
 import axios from "axios";
 
-// Define types
+// --- Types ---
 interface ClockRecord {
     clockInTime: string;
     clockOutTime: string | null;
     totalHours: number | null;
 }
 
+interface UserClockData {
+    isClockedIn: boolean;
+    clockInRecord: ClockRecord[];
+}
+
 interface ClockInState {
-    usersClockData: {
-        [userID: string]: {
-            isClockedIn: boolean;
-            clockInRecord: ClockRecord[];
-        };
-    };
+    usersClockData: Record<string, UserClockData>;
     loading: boolean;
     error: string | null;
 }
@@ -25,7 +26,7 @@ const initialState: ClockInState = {
     error: null,
 };
 
-// Helper to update user clock state locally
+// --- Helper ---
 const updateUserClockData = (
     state: ClockInState,
     userID: string,
@@ -39,6 +40,8 @@ const updateUserClockData = (
         if (lastRecord && lastRecord.clockOutTime === null && !isClockedIn) {
             lastRecord.clockOutTime = newClockRecord.clockOutTime;
             lastRecord.totalHours = newClockRecord.totalHours;
+        } else {
+            user.clockInRecord.push(newClockRecord); // clock-in again
         }
         user.isClockedIn = isClockedIn;
     } else {
@@ -49,125 +52,106 @@ const updateUserClockData = (
     }
 };
 
-// Async thunk for clocking in
+// --- Thunks ---
 export const clockIn = createAsyncThunk<
-    ClockInState,
+    ClockRecord,
     { id: string; token: string },
     { rejectValue: string }
 >("clockIn/clockIn", async ({ id, token }, { rejectWithValue }) => {
     try {
-
-        const res = await axios.get(`http://localhost:4000/api/clock/clockIn/${id}`, {
+        const res = await API.get(`/clock/clockIn/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
         });
 
-        if (res.status === 201) {
+        if (res.status === 201 && res.data?.clockInRecord?.clockInTime) {
             return {
-                usersClockData: {
-                    [id]: {
-                        isClockedIn: res.data.clockedIn,
-                        clockInRecord: [
-                            {
-                                clockInTime: res.data.clockInRecord.clockInTime,
-                                clockOutTime: null,
-                                totalHours: 0,
-                            },
-                        ],
-                    },
-                },
-                loading: false,
-                error: null,
+                clockInTime: res.data.clockInRecord.clockInTime,
+                clockOutTime: null,
+                totalHours: null,
             };
-        } else {
-            return rejectWithValue("Clock-in failed");
         }
+
+        return rejectWithValue("Invalid clock-in response");
     } catch (err) {
         if (axios.isAxiosError(err) && err.response) {
-            return rejectWithValue(err.response.data?.message || "Clock-in failed");
+            return rejectWithValue(
+                err.response.data?.message || "Clock-in failed"
+            );
         }
-        return rejectWithValue("Clock-in failed");
+        return rejectWithValue("Clock-in failed due to unexpected error");
     }
 });
 
-// Async thunk for clocking out
 export const clockOut = createAsyncThunk<
-    ClockInState,
+    ClockRecord,
     { id: string; token: string },
     { rejectValue: string }
 >("clockIn/clockOut", async ({ id, token }, { rejectWithValue }) => {
     try {
-        const res = await axios.get(`http://localhost:4000/api/clock/clockOut/${id}`, {
+        const res = await API.get(`/clock/clockOut/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
         });
 
-        if (res.status === 200) {
+        if (
+            res.status === 200 &&
+            res.data?.clockInRecord?.clockOutTime &&
+            res.data?.clockInRecord?.totalHours
+        ) {
             return {
-                usersClockData: {
-                    [id]: {
-                        isClockedIn: false,
-                        clockInRecord: [
-                            {
-                                clockInTime: res.data.clockInRecord.clockInTime,
-                                clockOutTime: res.data.clockInRecord.clockOutTime,
-                                totalHours: res.data.clockInRecord.totalHours,
-                            },
-                        ],
-                    },
-                },
-                loading: false,
-                error: null,
+                clockInTime: res.data.clockInRecord.clockInTime,
+                clockOutTime: res.data.clockInRecord.clockOutTime,
+                totalHours: res.data.clockInRecord.totalHours,
             };
-        } else {
-            return rejectWithValue("Clock-out failed");
         }
+
+        return rejectWithValue("Invalid clock-out response");
     } catch (err) {
         if (axios.isAxiosError(err) && err.response) {
-            return rejectWithValue(err.response.data?.message || "Clock-out failed");
+            return rejectWithValue(
+                err.response.data?.message || "Clock-out failed"
+            );
         }
-        return rejectWithValue("Clock-out failed");
+        return rejectWithValue("Clock-out failed due to unexpected error");
     }
 });
 
-// Slice
+// --- Slice ---
 const clockInSlice = createSlice({
     name: "clockIn",
     initialState,
     reducers: {},
     extraReducers: (builder) => {
         builder
-
-            // CLOCK-IN
+            // Clock-In
             .addCase(clockIn.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(clockIn.fulfilled, (state, action) => {
                 state.loading = false;
-                const newClockRecords = action.payload.usersClockData;
-                for (const [userID, record] of Object.entries(newClockRecords)) {
-                    updateUserClockData(state, userID, record.clockInRecord[0], true);
-                }
+                const record = action.payload;
+                const userID = record.clockInTime.split("-")[0]; // If userID isn't passed, extract logic here or thunk
+                updateUserClockData(state, userID, record, true);
             })
             .addCase(clockIn.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || "Clock-in error";
             })
 
-            // CLOCK-OUT
+            // Clock-Out
             .addCase(clockOut.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(clockOut.fulfilled, (state, action) => {
                 state.loading = false;
-                const newClockRecords = action.payload.usersClockData;
-                for (const [userID, record] of Object.entries(newClockRecords)) {
-                    updateUserClockData(state, userID, record.clockInRecord[0], false);
-                }
+                const record = action.payload;
+                const userID = record.clockInTime.split("-")[0]; // Extract logic here if needed
+                updateUserClockData(state, userID, record, false);
             })
             .addCase(clockOut.rejected, (state, action) => {
                 state.loading = false;
