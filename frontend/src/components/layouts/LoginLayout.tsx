@@ -65,7 +65,7 @@ const TimeManagementLayout: React.FC = () => {
           {activeComponent === "timePunch" && userID && token && (
             <TimePunch id={userID} token={token} />
           )}
-          {activeComponent === "clockSummary" && <ClockSummary token={token} />}
+          {activeComponent === "clockSummary" && <ClockSummary/>}
         </div>
       </div>
 
