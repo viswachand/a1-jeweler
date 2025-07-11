@@ -24,12 +24,19 @@ export const useTimeManagementController = () => {
 
   const handleLoginSuccess = useCallback(
     async (id: string) => {
+      if (!id) {
+        // 🧭 No user ID — fallback to summary view
+        setUserId("");
+        setActiveComponent("clockSummary");
+        closeDialog();
+        return;
+      }
+
       setUserId(id);
 
       if (loginPurpose === "ringSale") {
         try {
           const validated = await dispatch(validateRingSaleAccess({ userID: id })).unwrap();
-          console.log(validated)
           if (validated) {
             navigate("/dashboard");
           } else {
@@ -40,10 +47,14 @@ export const useTimeManagementController = () => {
         } finally {
           closeDialog();
         }
+      } else {
+        // ✅ If not ringSale, dialog should just close normally
+        closeDialog();
       }
     },
     [dispatch, loginPurpose, navigate, closeDialog]
   );
+
 
   const handleButtonClick = useCallback((action: DialogContext | "timeClockSummary") => {
     // persistor.purge();
