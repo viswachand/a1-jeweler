@@ -79,7 +79,16 @@ const TimePunch: React.FC<TimePunchProps> = ({ id, token }) => {
     ))
   ), [employeeLogDetails, employeeDate]);
 
+  if (!id || !token) {
+    return (
+      <div className="flex flex-1 p-4 justify-center items-center">
+        <div className="text-sm text-gray-500">User not loaded yet. Please wait...</div>
+      </div>
+    );
+  }
+
   return (
+
     <div className="flex flex-1 p-4 justify-start items-start">
       <div className="w-full max-w text-center border-2 p-6">
         <h2 className="text-2xl font-bold mb-4">Time Punch</h2>

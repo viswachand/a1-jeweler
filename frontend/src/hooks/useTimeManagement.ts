@@ -49,6 +49,7 @@ export const useTimeManagementController = () => {
     // persistor.purge();
     switch (action) {
       case "timePunch":
+        setUserId("");
         setLoginPurpose("punch");
         setDialogContext("timePunch");
         setActiveComponent("timePunch");
