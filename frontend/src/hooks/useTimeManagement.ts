@@ -19,8 +19,6 @@ export const useTimeManagementController = () => {
   const closeDialog = useCallback(() => {
     setDialogContext(null);
     setLoginPurpose(null);
-
-    // If no user is logged in, reset to clockSummary view
     setActiveComponent(userID ? "timePunch" : "clockSummary");
   }, [userID]);
 

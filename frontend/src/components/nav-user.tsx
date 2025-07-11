@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { logoutUserById } from "@/features/auth/authSlice";
+import { logout } from "@/features/auth/currentUser";
 import { useNavigate } from "react-router-dom";
 import { selectCurrentUser } from "@/features/auth/currentUser";
 
@@ -30,8 +30,7 @@ export function NavUser() {
 
   const handleLogout = async () => {
     if (currentUser?.id) {
-      dispatch(logoutUserById(currentUser?.id));
-      localStorage.removeItem("persist:user");
+      dispatch(logout());
     }
     navigate("/");
   };
