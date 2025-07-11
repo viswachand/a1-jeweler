@@ -4,6 +4,7 @@ import { getUserClock } from "@/features/clockIn/clockSummary";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { clockIn, clockOut } from "@/features/clockIn/clockIn";
 import { RootState } from "@/app/store";
+import { getClockSummary } from "@/features/clockIn/clockSummary";
 
 interface EmployeeClockRecord {
   clockInTime: string;
@@ -58,7 +59,8 @@ const TimePunch: React.FC<TimePunchProps> = ({ id, token }) => {
       const thunk = action === "in" ? clockIn : clockOut;
       await dispatch(thunk({ id, token })).unwrap();
       setIsClockedIn(action === "in");
-      await fetchUserClockData(); // Optional refresh
+      await fetchUserClockData();
+      await dispatch(getClockSummary());
     } catch (error) {
       console.error(`Clock-${action} failed:`, error);
       setErrorMessage(`Clock-${action} failed. Please try again.`);
