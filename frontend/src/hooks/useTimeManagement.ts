@@ -24,12 +24,11 @@ export const useTimeManagementController = () => {
 
   const handleLoginSuccess = useCallback(
     async (id: string) => {
-      console.log(id)
       if (!id) {
-        // 🧭 No user ID — fallback to summary view
         setUserId("");
+        setLoginPurpose(null);
         setActiveComponent("clockSummary");
-        closeDialog();
+        setDialogContext(null); // close dialog last
         return;
       }
 
