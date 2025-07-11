@@ -13,7 +13,6 @@ export const useIdleLogout = (idleTimeoutMs: number) => {
         if (!currentUser) return;
 
         let lastActivity = Date.now();
-        console.log("[IdleLogout] Timer started. Will logout after", idleTimeoutMs, "ms of inactivity");
 
         const resetTimer = () => {
             lastActivity = Date.now();
@@ -22,9 +21,7 @@ export const useIdleLogout = (idleTimeoutMs: number) => {
         const checkIdle = () => {
             const now = Date.now();
             if (now - lastActivity > idleTimeoutMs) {
-                console.log("[IdleLogout] User inactive. Logging out...");
                 dispatch(currentUserLogout());
-                localStorage.removeItem("persist:user");
                 navigate("/");
             }
         };

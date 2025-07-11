@@ -3,24 +3,30 @@ import { Button } from "../ui/button";
 import { getClockSummary } from "@/features/clockIn/clockSummary";
 import { useAppDispatch } from "@/app/hooks";
 
-interface EmployeeClockRecord {
-  employeeName: {
-    id: string;
-    name: string;
-    userID: number;
-  };
-  clockInTime: string;
-  clockOutTime: string;
+interface ClockPunch {
+  clockInTime: string | null;
+  clockOutTime: string | null;
   totalHours: number;
 }
 
-interface ClockSummaryProps {
-  token: string;
+interface ClockedInSummary {
+  [userId: string]: {
+    user: {
+      userID: number;
+      name: string;
+    };
+    clockedIn: boolean;
+    clockInTime: string | null;
+    clockOutTime: string | null;
+    punches: ClockPunch[];
+  };
 }
 
-const ClockSummary: React.FC<ClockSummaryProps> = ({ token }) => {
+
+
+const ClockSummary: React.FC = () => {
   const dispatch = useAppDispatch();
-  const [employeeData, setEmployeeData] = useState<EmployeeClockRecord[]>([]);
+  const [summaryData, setSummaryData] = useState<ClockedInSummary>({});
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -28,36 +34,71 @@ const ClockSummary: React.FC<ClockSummaryProps> = ({ token }) => {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const response = await dispatch(getClockSummary(token)).unwrap();
-      setEmployeeData(response);
+      const response = await dispatch(getClockSummary()).unwrap();
+      setSummaryData(response);
     } catch (error) {
       console.error("Failed to fetch clock summary:", error);
       setErrorMessage("Failed to load employee time data.");
     } finally {
       setIsLoading(false);
     }
-  }, [dispatch, token]);
+  }, [dispatch]);
 
   useEffect(() => {
     fetchClockSummary();
   }, [fetchClockSummary]);
 
   const totalHours = useMemo(() => {
-    return employeeData.reduce((total, record) => total + (record.totalHours || 0), 0);
-  }, [employeeData]);
+    return Object.values(summaryData).reduce((total, entry) => {
+      const clockIn = entry.clockInTime ? new Date(`1970-01-01T${entry.clockInTime}`) : null;
+      const clockOut = entry.clockOutTime ? new Date(`1970-01-01T${entry.clockOutTime}`) : null;
+      if (clockIn && clockOut) {
+        const diff = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60 * 60);
+        return total + Math.max(diff, 0);
+      }
+      return total;
+    }, 0);
+  }, [summaryData]);
 
   const employeeRows = useMemo(() => (
-    employeeData.map((data, index) => (
-      <div key={index} className="flex justify-between pt-2 text-left text-sm">
-        <div className="w-1/4">{data.employeeName.name}</div>
-        <div className="w-1/4">{data.clockInTime}</div>
-        <div className="w-1/4">
-          {data.clockOutTime === "Invalid Date" ? "-" : data.clockOutTime}
+    Object.entries(summaryData).map(([id, { user, clockInTime, clockOutTime, punches }]) => (
+      <div key={id}>
+        <div className="flex justify-between pt-2 text-left text-sm">
+          <div className="w-1/4">{user.name}</div>
+          <div className="w-1/4">{clockInTime ?? "-"}</div>
+          <div className="w-1/4">{clockOutTime ?? "-"}</div>
+          <div className="w-1/4">
+            {clockOutTime && clockInTime
+              ? (
+                  Math.max(
+                    (new Date(`1970-01-01T${clockOutTime}`).getTime() -
+                      new Date(`1970-01-01T${clockInTime}`).getTime()) /
+                      (1000 * 60 * 60),
+                    0
+                  ).toFixed(2)
+                )
+              : "0.00"}
+          </div>
         </div>
-        <div className="w-1/4">{data.totalHours.toFixed(2)}</div>
+
+        {/* 🔽 Multiple punch breakdown */}
+        {punches && punches.length > 0 && (
+          <div className="pt-1 pb-2 text-xs text-left text-gray-700 pl-1">
+            <div className="ml-2 border-l-2 border-gray-300 pl-3">
+              <p className="font-semibold mb-1">Punch History:</p>
+              {punches.map((punch, index) => (
+                <div key={index} className="flex justify-between pr-8">
+                  <div className="w-1/4">{`In: ${punch.clockInTime ?? "-"}`}</div>
+                  <div className="w-1/4">{`Out: ${punch.clockOutTime ?? "-"}`}</div>
+                  <div className="w-1/4">{`Duration: ${punch.totalHours.toFixed(2)}h`}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     ))
-  ), [employeeData]);
+  ), [summaryData]);
 
   return (
     <div className="flex flex-1 p-4 justify-start items-top">
@@ -77,7 +118,7 @@ const ClockSummary: React.FC<ClockSummaryProps> = ({ token }) => {
           </div>
           <div className="w-full border-b-2 border-gray-300 my-2"></div>
 
-          {employeeData.length === 0 && !isLoading && (
+          {Object.keys(summaryData).length === 0 && !isLoading && (
             <p className="text-gray-500 text-sm mt-4">No time data found.</p>
           )}
 

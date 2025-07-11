@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useAppDispatch } from "@/app/hooks";
 import { useNavigate } from "react-router-dom";
 import { validateRingSaleAccess } from "@/features/auth/validateRingSaleAccess";
+// import { persistor } from "@/app/store";
 
 type DialogContext = "timePunch" | "ringSale" | null;
 type LoginPurpose = "punch" | "ringSale" | null;
@@ -28,6 +29,7 @@ export const useTimeManagementController = () => {
       if (loginPurpose === "ringSale") {
         try {
           const validated = await dispatch(validateRingSaleAccess({ userID: id })).unwrap();
+          console.log(validated)
           if (validated) {
             navigate("/dashboard");
           } else {
@@ -44,6 +46,7 @@ export const useTimeManagementController = () => {
   );
 
   const handleButtonClick = useCallback((action: DialogContext | "timeClockSummary") => {
+    // persistor.purge();
     switch (action) {
       case "timePunch":
         setLoginPurpose("punch");

@@ -11,8 +11,9 @@ interface Props {
 const PublicRoute = ({ children }: Props) => {
   const currentUser = useSelector((state: RootState) => state.user.currentUser);
   const currentUserId = currentUser ? currentUser.id : "";
-  const isClockedIn = useSelector(
-    (state: RootState) => state.clock.usersClockData[currentUserId]?.isClockedIn
+ const isClockedIn = useSelector(
+    (state: RootState) =>
+      state.clockSummary.summaryByUser?.[currentUserId]?.clockedIn ?? null
   );
 
   const isAuthenticated = !!currentUser;

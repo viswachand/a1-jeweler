@@ -13,12 +13,13 @@ export const validateRingSaleAccess = createAsyncThunk<
 >("auth/validateRingSaleAccess", async ({ userID }, { dispatch, getState }) => {
     const token = userID ? getState().auth.loggedInuser[userID]?.token : null;
     if (!token) throw new Error("Missing token");
-    await dispatch(fetchCurrentUser(token)).unwrap();
-    const isClockedIn = getState().clock.usersClockData[userID]?.isClockedIn;
 
-    if (!isClockedIn) {
-        throw new Error("You must be clocked in to access Ring Sale.");
-    }
+    console.log(userID)
+
+    await dispatch(fetchCurrentUser(token)).unwrap();
+
+    const isClockedIn =
+        getState().clockSummary.summaryByUser?.[userID]?.clockedIn ?? null;
 
     return isClockedIn;
 });
