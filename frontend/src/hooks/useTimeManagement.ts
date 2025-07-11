@@ -19,8 +19,8 @@ export const useTimeManagementController = () => {
   const closeDialog = useCallback(() => {
     setDialogContext(null);
     setLoginPurpose(null);
-    setActiveComponent(userID ? "timePunch" : "clockSummary");
-  }, [userID]);
+    setActiveComponent(prev => (prev === "timePunch" ? "timePunch" : "clockSummary"));
+  }, []);
 
   const handleLoginSuccess = useCallback(
     async (id: string) => {
