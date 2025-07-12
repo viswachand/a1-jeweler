@@ -16,19 +16,25 @@ export const useTimeManagementController = () => {
   const [userID, setUserId] = useState<string>("");
   const [activeComponent, setActiveComponent] = useState<"timePunch" | "clockSummary">("clockSummary");
 
-  const closeDialog = useCallback(() => {
-    setDialogContext(null);
-    setLoginPurpose(null);
-    setActiveComponent(prev => (prev === "timePunch" ? "timePunch" : "clockSummary"));
-  }, []);
+  const closeDialog = useCallback(
+    (fallbackView: "clockSummary" | "timePunch" | null = null) => {
+      setDialogContext(null);
+      setLoginPurpose(null);
+
+      if (fallbackView) {
+        setActiveComponent(fallbackView);
+      }
+    },
+    []
+  );
+
 
   const handleLoginSuccess = useCallback(
-    async (id: string) => {
-      if (!id) {
+    async (id: string | null, token: string | null) => {
+      if (!id || !token) {
+        console.log("Login canceled or failed — ID:", id, "Token:", token);
         setUserId("");
-        setLoginPurpose(null);
-        setActiveComponent("clockSummary");
-        setDialogContext(null); // close dialog last
+        closeDialog("clockSummary"); // fallback when login doesn't happen
         return;
       }
 
@@ -45,15 +51,16 @@ export const useTimeManagementController = () => {
         } catch (err) {
           alert((err as Error)?.message || "Access denied.");
         } finally {
-          closeDialog();
+          closeDialog("clockSummary");
         }
       } else {
-        // ✅ If not ringSale, dialog should just close normally
-        closeDialog();
+        closeDialog(); // normal punch path
       }
     },
     [dispatch, loginPurpose, navigate, closeDialog]
   );
+
+
 
 
   const handleButtonClick = useCallback((action: DialogContext | "timeClockSummary") => {

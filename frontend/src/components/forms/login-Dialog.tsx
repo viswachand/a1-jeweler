@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { loginUser } from "@/features/auth/authSlice";
 import type { AppDispatch } from "@/app/store";
 
 interface TimePunchDialogProps {
   onClose: () => void;
-  onLoginSuccess: (id: string, token: string) => void;
+  onLoginSuccess: (id: string | null, token: string | null) => void;
 }
 
 const TimePunchDialog: React.FC<TimePunchDialogProps> = ({
@@ -16,20 +16,17 @@ const TimePunchDialog: React.FC<TimePunchDialogProps> = ({
 
   const [userID, setUserID] = useState("");
   const [password, setPassword] = useState("");
-  const [activeField, setActiveField] = useState<"userID" | "password">(
-    "userID"
-  );
+  const [activeField, setActiveField] = useState<"userID" | "password">("userID");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const KEYPAD_KEYS = useMemo(() => [1, 2, 3, 4, 5, 6, 7, 8, 9, 0], []);
-
-  const handleKeypadClick = (num: string) => {
+  const handleKeypadClick = (key: string) => {
     if (error) setError("");
+    if (key === "Tab") return; // ⛔ prevent "Tab" from inserting
     if (activeField === "userID") {
-      setUserID((prev) => prev + num);
+      setUserID((prev) => prev + key);
     } else {
-      setPassword((prev) => prev + num);
+      setPassword((prev) => prev + key);
     }
   };
 
@@ -38,27 +35,27 @@ const TimePunchDialog: React.FC<TimePunchDialogProps> = ({
     const parsedPassword = Number(password.trim());
 
     if (isNaN(parsedUserID) || isNaN(parsedPassword)) {
-      setError("User ID and Password must be numbers.");
+      setError("User ID and Password must be numeric.");
       return;
     }
 
     setLoading(true);
     try {
-      const result = await dispatch(
-        loginUser({ userID: parsedUserID, password: parsedPassword })
-      ).unwrap();
+      const result = await dispatch(loginUser({ userID: parsedUserID, password: parsedPassword })).unwrap();
 
       if (result?.user?.id && result?.token) {
         onLoginSuccess(result.user.id, result.token);
-        setError("");
         handleClear();
+        setError("");
         onClose();
       } else {
-        setError("Login succeeded but response was incomplete.");
+        setError("Login succeeded but user or token was missing.");
+        onLoginSuccess(null, null);
+        onClose();
       }
-    }catch (error) {
-      console.error("Login failed:", error);
-      setError(typeof error === "string" ? error : "Login error occurred.");
+    } catch (err) {
+      console.error("Login failed:", err);
+      setError(typeof err === "string" ? err : "Invalid credentials or login error.");
     } finally {
       setLoading(false);
     }
@@ -78,22 +75,30 @@ const TimePunchDialog: React.FC<TimePunchDialogProps> = ({
     setError("");
   };
 
+  const handleCancel = () => {
+    handleClear();
+    onLoginSuccess(null, null);
+    onClose();
+  };
+
+  const keyStyle = "p-4 border border-gray-300 rounded-md text-lg font-semibold bg-gray-200 text-black";
+
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50"
-      aria-modal="true"
-      role="dialog"
-    >
-      <div className="bg-primary p-6 rounded-md shadow-lg w-128 max-w-full">
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50" aria-modal="true" role="dialog">
+      <div className="relative bg-primary p-10 rounded-md shadow-lg w-[42rem] max-w-full min-h-[30rem]">
+        {/* Close Button */}
+        <button
+          onClick={handleCancel}
+          className="absolute top-3 right-4 text-white text-xl hover:text-red-300"
+          aria-label="Close dialog"
+        >
+          ✖
+        </button>
+
         {/* Inputs */}
         <div className="flex space-x-4 mb-4">
           <div className="flex flex-col w-1/2">
-            <label
-              htmlFor="userID"
-              className="text-sm font-semibold mb-2 text-white"
-            >
-              User ID
-            </label>
+            <label htmlFor="userID" className="text-lg font-semibold mb-2 text-white">User ID</label>
             <input
               id="userID"
               type="text"
@@ -101,20 +106,13 @@ const TimePunchDialog: React.FC<TimePunchDialogProps> = ({
               value={userID}
               onFocus={() => setActiveField("userID")}
               onChange={(e) => setUserID(e.target.value)}
-              className={`p-2 border ${
-                activeField === "userID" ? "border-blue-500" : "border-gray-300"
-              } rounded-md`}
+              className={`p-2 border ${activeField === "userID" ? "border-blue-500" : "border-gray-300"} rounded-md h-14 `}
               placeholder="Enter User ID"
               aria-label="User ID"
             />
           </div>
           <div className="flex flex-col w-1/2">
-            <label
-              htmlFor="password"
-              className="text-sm font-semibold mb-2 text-white"
-            >
-              Password
-            </label>
+            <label htmlFor="password" className="text-lg font-semibold mb-2 text-white">Password</label>
             <input
               id="password"
               type="password"
@@ -122,68 +120,53 @@ const TimePunchDialog: React.FC<TimePunchDialogProps> = ({
               value={password}
               onFocus={() => setActiveField("password")}
               onChange={(e) => setPassword(e.target.value)}
-              className={`p-2 border ${
-                activeField === "password"
-                  ? "border-blue-500"
-                  : "border-gray-300"
-              } rounded-md`}
+              className={`p-2 border ${activeField === "password" ? "border-blue-500" : "border-gray-300"} rounded-md h-14 `}
               placeholder="Enter Password"
               aria-label="Password"
             />
           </div>
         </div>
 
-        {/* Error */}
+        {/* Error Message */}
         {error && <div className="text-red-500 mb-4 text-sm">{error}</div>}
 
         {/* Keypad */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          {KEYPAD_KEYS.map((num) => (
-            <button
-              key={num}
-              onClick={() => handleKeypadClick(num.toString())}
-              className="p-4 border border-gray-300 rounded-md text-lg font-semibold bg-gray-200 text-black"
-              disabled={loading}
-              aria-label={`Key ${num}`}
-            >
-              {num}
-            </button>
-          ))}
+        <div className="grid grid-cols-4 grid-rows-4 gap-4 mb-4 w-full max-w max-h">
+          {/* Row 1 */}
+          <button onClick={() => handleKeypadClick("7")} className={keyStyle}>7</button>
+          <button onClick={() => handleKeypadClick("8")} className={keyStyle}>8</button>
+          <button onClick={() => handleKeypadClick("9")} className={keyStyle}>9</button>
+          <button onClick={handleBackspace} className={keyStyle}>⬅️</button>
+
+          {/* Row 2 */}
+          <button onClick={() => handleKeypadClick("4")} className={keyStyle}>4</button>
+          <button onClick={() => handleKeypadClick("5")} className={keyStyle}>5</button>
+          <button onClick={() => handleKeypadClick("6")} className={keyStyle}>6</button>
+          <button onClick={() => handleKeypadClick("Tab")} className={keyStyle}>Tab</button>
+
+          {/* Row 3 */}
+          <button onClick={() => handleKeypadClick("1")} className={keyStyle}>1</button>
+          <button onClick={() => handleKeypadClick("2")} className={keyStyle}>2</button>
+          <button onClick={() => handleKeypadClick("3")} className={keyStyle}>3</button>
           <button
-            onClick={handleBackspace}
-            className="p-4 border border-gray-300 rounded-md text-lg font-semibold bg-gray-200 text-black"
+            onClick={handleEnter}
+            className="row-span-2 bg-green-600 text-white font-bold rounded-md p-4 flex items-center justify-center"
             disabled={loading}
-            aria-label="Backspace"
+            aria-label="Enter"
           >
-            ⬅️
+            {loading ? "Logging in..." : "Enter"}
           </button>
+
+          {/* Row 4 */}
           <button
             onClick={handleClear}
-            className="p-4 border border-gray-300 rounded-md text-lg font-semibold bg-gray-200 text-black"
-            disabled={loading}
+            className="p-4 border border-gray-300 rounded-md text-lg font-semibold bg-red-100 text-black"
             aria-label="Clear"
           >
             Clear
           </button>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex justify-between space-x-2">
-          <button
-            onClick={handleEnter}
-            className="w-full p-3 bg-blue-500 text-white rounded-md"
-            disabled={loading}
-            aria-label="Submit login"
-          >
-            {loading ? "Logging in..." : "Enter"}
-          </button>
-          <button
-            onClick={onClose}
-            className="w-full p-3 bg-gray-300 text-gray-700 rounded-md"
-            aria-label="Cancel login"
-          >
-            Cancel
-          </button>
+          <button onClick={() => handleKeypadClick("0")} className={keyStyle}>0</button>
+          <button onClick={() => handleKeypadClick(".")} className={keyStyle}>.</button>
         </div>
       </div>
     </div>
